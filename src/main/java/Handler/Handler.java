@@ -1,7 +1,10 @@
 package Handler;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -12,6 +15,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -30,7 +37,6 @@ public class Handler {
 	private static final String METHOD_GET = "GET";
 	private static final String METHOD_OPTIONS = "OPTIONS";
 	private static final String ALLOWED_METHODS = METHOD_GET + "," + METHOD_OPTIONS;
-
 
 	public static void HandleRequest(HttpExchange exchange) {
 
@@ -56,13 +62,8 @@ public class Handler {
 			switch (requestMethod) {
 			case METHOD_GET:
 				System.out.println("new connection, get: ");
-				final Map<String, List<String>> requestParameters = getRequestParameters(exchange.getRequestURI());
-				// do something with the request parameters
-				final String responseBody = "['hello world!']";
-				headers.set(HEADER_CONTENT_TYPE, String.format("application/json; charset=%s", CHARSET));
-				final byte[] rawResponseBody = responseBody.getBytes(CHARSET);
-				exchange.sendResponseHeaders(STATUS_OK, rawResponseBody.length);
-				exchange.getResponseBody().write(rawResponseBody);
+				headers.set(HEADER_ALLOW, ALLOWED_METHODS);
+				exchange.sendResponseHeaders(STATUS_OK, NO_RESPONSE_LENGTH);
 				break;
 			case METHOD_OPTIONS:
 				System.out.println("new connection, opption: ");
@@ -71,8 +72,18 @@ public class Handler {
 				break;
 			default:
 				System.out.println("new connection, defaullt: ");
-				headers.set(HEADER_ALLOW, ALLOWED_METHODS);
-				exchange.sendResponseHeaders(STATUS_METHOD_NOT_ALLOWED, NO_RESPONSE_LENGTH);
+				InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+				BufferedReader br = new BufferedReader(reader);
+				String JsonLine = br.readLine();
+				System.out.println(JsonLine);
+				// do something with the request parameters
+				JsonProcess(JsonLine);
+				// send a response
+				final String responseBody = "['hello world!']";
+				headers.set(HEADER_CONTENT_TYPE, String.format("application/json; charset=%s", CHARSET));
+				final byte[] rawResponseBody = responseBody.getBytes(CHARSET);
+				exchange.sendResponseHeaders(STATUS_OK, rawResponseBody.length);
+				exchange.getResponseBody().write(rawResponseBody);
 				break;
 			}
 		} finally {
@@ -81,30 +92,10 @@ public class Handler {
 
 	}
 
-	private static Map<String, List<String>> getRequestParameters(final URI requestUri) {
-		final Map<String, List<String>> requestParameters = new LinkedHashMap<>();
-		final String requestQuery = requestUri.getRawQuery();
-		System.out.println(requestQuery);
-		if (requestQuery != null) {
-			final String[] rawRequestParameters = requestQuery.split("[&;]", -1);
-			for (final String rawRequestParameter : rawRequestParameters) {
-				final String[] requestParameter = rawRequestParameter.split("=", 2);
-				final String requestParameterName = decodeUrlComponent(requestParameter[0]);
-				requestParameters.putIfAbsent(requestParameterName, new ArrayList<>());
-				final String requestParameterValue = requestParameter.length > 1
-						? decodeUrlComponent(requestParameter[1])
-						: null;
-				requestParameters.get(requestParameterName).add(requestParameterValue);
-			}
-		}
-		return requestParameters;
-	}
-
-	private static String decodeUrlComponent(final String urlComponent) {
-		try {
-			return URLDecoder.decode(urlComponent, CHARSET.name());
-		} catch (final UnsupportedEncodingException ex) {
-			throw new InternalError(ex);
-		}
+	public static void JsonProcess(String json) {
+		System.out.println("processing Json");
+		JsonElement tree = new JsonParser().parse(json);
+		JsonObject object = tree.getAsJsonObject();
+		System.out.println("TestJson " + object.get("customerID"));
 	}
 }

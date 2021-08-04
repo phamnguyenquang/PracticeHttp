@@ -12,11 +12,7 @@ import java.net.Socket;
 import ServerType.GenericServer;
 import ServerType.HttpReqServer;
 
-/**
- * Hello world!
- *
- */
-public class App {
+public class AppServer {
 	public static void main(String[] args) throws IOException {
 
 		new HttpReqServer(8080);

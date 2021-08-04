@@ -1,20 +1,8 @@
 package ServerType;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import Handler.Handler;
@@ -39,7 +27,7 @@ public class HttpReqServer {
 	private void startServer() {
 		System.out.println("server listening on port: " + port);
 //		HttpContext context = server.createContext("/");
-		HttpContext context = server.createContext("/json");
+		HttpContext context = server.createContext("/");
 		context.setHandler(Handler::HandleJSONRequest);
 
 		server.start();
